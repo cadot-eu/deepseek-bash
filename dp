@@ -13,7 +13,23 @@ is_bash_script() {
   [[ "$1" =~ ^#!\/bin\/bash ]] && return 0 || return 1
 }
 
-# Vérifier les options -c/--confirmation, -d/--debug, -s/--save et -p/--push
+# Afficher l'aide si aucun argument n'est fourni
+if [ $# -eq 0 ]; then
+  echo "\nUsage: ./dp [options] <question>"
+  echo "\nOptions:"
+  echo "  -c, --confirmation    Ask for confirmation before executing the command"
+  echo "  -d, --debug          Show debug information (question, JSON, response)"
+  echo "  -s, --save <file>    Save the output to a file"
+  echo "  -p, --push <file>    Include the content of a file in the question (can be used multiple times)"
+  echo "\nExamples:"
+  echo "  ./dp -s README.MD list my files"
+  echo "  ./dp -c list files in color"
+  echo "  ./dp -d show disk usage"
+  echo "  ./dp -p README.MD summarize in one sentence in Dutch"
+  echo "  ./dp liste fichiers de ce répertoire en couleurs et avec juste la taille lisible en Mo"
+  exit 0
+fi
+
 CONFIRM=false
 DEBUG=false
 SAVE=false
