@@ -9,13 +9,35 @@ if [ -z "$DEEPSEEK_API_TOKEN" ]; then
   exit 1
 fi
 
+# Vérifier les options -c/--confirmation, -d/--debug et -s/--save
+CONFIRM=false
+DEBUG=false
+SAVE=false
+SAVE_PATH=""
+if [[ "$1" == "-c" || "$1" == "--confirmation" ]]; then
+  CONFIRM=true
+  shift
+elif [[ "$1" == "-d" || "$1" == "--debug" ]]; then
+  DEBUG=true
+  shift
+elif [[ "$1" == "-s" || "$1" == "--save" ]]; then
+  SAVE=true
+  SAVE_PATH="$2"
+  shift 2
+fi
+
+# Récupérer les HISTORY dernières commandes du bash
+
+# Récupérer et échapper les HISTORY dernières commandes du bash
+HIST_COUNT=${HISTORY:-10}
+BASH_HISTORY_RAW=$(tail -n "$HIST_COUNT" ~/.bash_history | awk '{print NR ": " $0}')
+BASH_HISTORY=$(printf '%s' "$BASH_HISTORY_RAW" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read())[1:-1])')
+
 # Construire la requête à partir des arguments
 PROMPT="$*"
 
 # Appeler l'API DeepSeek
-echo "Commande générée: $COMMAND"
-
-echo "Commande générée: $COMMAND"
+# (supprimé pour une sortie plus propre)
 
 
 # Échapper correctement le prompt pour le JSON
@@ -26,7 +48,7 @@ JSON_PAYLOAD=$(cat <<EOF
   "model": "deepseek-chat",
   "messages": [
     {"role": "system", "content": "You are a helpful assistant. You only answer with a bash command, no explanation."},
-    {"role": "user", "content": "$ESCAPED_PROMPT"}
+    {"role": "user", "content": "Historique des commandes précédentes :\n$BASH_HISTORY\n\nQuestion : $ESCAPED_PROMPT"}
   ],
   "stream": false
 }
@@ -39,9 +61,7 @@ RESPONSE=$(curl -s -X POST "https://api.deepseek.com/chat/completions" \
   -d "$JSON_PAYLOAD")
 
 # Afficher la réponse brute pour debug
-echo "Réponse API: $RESPONSE"
-
-echo "Commande générée: $COMMAND"
+# (supprimé pour une sortie plus propre)
 # Extraire la commande générée (champ assistant, JSON imbriqué)
 COMMAND=$(echo "$RESPONSE" | python3 -c "import sys, json; r=json.load(sys.stdin); print(r['choices'][0]['message']['content']) if 'choices' in r and r['choices'] else print('')")
 
@@ -55,10 +75,42 @@ if [ -z "$COMMAND" ]; then
   exit 2
 fi
 
-echo "Commande générée: $COMMAND"
+# (supprimé pour une sortie plus propre)
 
-# Exécuter la commande
-bash -c "$COMMAND"
 
-# Confirmation
-echo "Commande exécutée avec succès."
+# Afficher la commande avant exécution ou debug
+echo "Commande exécutée : $COMMAND"
+if [ "$DEBUG" = true ]; then
+  echo -e "\n--- DEBUG ---"
+  echo -e "\033[1;34mQuestion envoyée à DeepSeek :\033[0m"
+  echo -e "\033[1;34mHistorique des commandes précédentes :\033[0m"
+  tail -n "${HISTORY:-10}" ~/.bash_history | awk '{print NR ": " $0}'
+  echo -e "\n\033[1;34mQuestion :\033[0m $*"
+  echo -e "\n\033[1;34mJSON envoyé :\033[0m"
+  echo "$JSON_PAYLOAD"
+  echo -e "\n\033[1;34mRéponse JSON DeepSeek :\033[0m"
+  echo "$RESPONSE"
+  echo -e "\n\033[1;32mCommande proposée par Deepseek :\033[0m"
+  echo "$COMMAND"
+  echo "--- FIN DEBUG ---"
+  exit 0
+fi
+if [ "$SAVE" = true ]; then
+  if [ -z "$SAVE_PATH" ]; then
+    echo "Erreur : chemin de fichier manquant pour l'option -s/--save."
+    exit 3
+  fi
+  bash -c "$COMMAND" > "$SAVE_PATH"
+  echo "Résultat de la commande sauvegardé dans : $SAVE_PATH"
+  exit 0
+fi
+if [ "$CONFIRM" = true ]; then
+  read -p "Voulez-vous exécuter cette commande ? (O/n) : " confirm
+  if [[ -z "$confirm" || "$confirm" =~ ^[oOyY]$ ]]; then
+    bash -c "$COMMAND"
+  else
+    echo "Commande annulée."
+  fi
+else
+  bash -c "$COMMAND"
+fi
