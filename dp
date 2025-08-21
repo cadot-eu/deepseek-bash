@@ -111,13 +111,12 @@ fi
 
 
 # Afficher la commande avant exécution ou debug
+echo "----------------------------------------"
 if is_bash_script "$COMMAND"; then
   # Supprime le shebang et les lignes vides
   CMD_MAIN=$(echo "$COMMAND" | sed '1{/^#!\/bin\/bash$/d}' | sed '/^$/d' | tail -n 1)
-  echo "Commande exécutée : $CMD_MAIN"
   bash -c "$CMD_MAIN" 2>&1
 else
-  # Affiche uniquement la réponse si ce n'est pas un script bash
   echo "$COMMAND"
 fi
 if [ "$DEBUG" = true ]; then

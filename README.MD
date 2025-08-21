@@ -50,6 +50,11 @@ This script allows you to interact with DeepSeek's API to generate and execute b
   - Asks DeepSeek for a sample README.MD file and creates it on disk if used with `-s`.
 - `./dp -p README.MD summarize in one sentence in Dutch`
   - Sends the content of `README.MD` to DeepSeek and asks for a summary in Dutch. The response will be displayed as plain text (not executed as a command).
+  
+### Exemples
+
+- `./dp liste fichiers de ce répertoire en couleurs et avec juste la taille lisible en Mo`
+  - Liste les fichiers du répertoire courant en couleurs et affiche uniquement la taille lisible en Mo.
 
 ## Français
 
@@ -74,6 +79,10 @@ Ce script permet d'interagir avec l'API DeepSeek pour générer et exécuter des
   - Demande à DeepSeek un exemple de fichier README.MD et le crée sur le disque si utilisé avec `-s`.
 - `./dp -p README.MD résume moi en une phrase en néerlandais`
   - Envoie le contenu de `README.MD` à DeepSeek et demande un résumé en néerlandais. La réponse sera affichée en texte simple (non exécutée comme commande).
+  
+### Examples
+
+### Exemples
 
 
 ## Contributing
