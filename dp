@@ -15,18 +15,18 @@ is_bash_script() {
 
 # Afficher l'aide si aucun argument n'est fourni
 if [ $# -eq 0 ]; then
-  echo "\nUsage: ./dp [options] <question>"
-  echo "\nOptions:"
-  echo "  -c, --confirmation    Ask for confirmation before executing the command"
-  echo "  -d, --debug          Show debug information (question, JSON, response)"
-  echo "  -s, --save <file>    Save the output to a file"
-  echo "  -p, --push <file>    Include the content of a file in the question (can be used multiple times)"
-  echo "\nExamples:"
-  echo "  ./dp -s README.MD list my files"
-  echo "  ./dp -c list files in color"
-  echo "  ./dp -d show disk usage"
-  echo "  ./dp -p README.MD summarize in one sentence in Dutch"
-  echo "  ./dp liste fichiers de ce répertoire en couleurs et avec juste la taille lisible en Mo"
+  echo -e "\033[1;34m\nUsage :\033[0m ./dp [options] <question>"
+  echo -e "\033[1;34m\nOptions :\033[0m"
+  echo -e "  \033[1;32m-c, --confirmation\033[0m    Ask for confirmation before executing the command"
+  echo -e "  \033[1;32m-d, --debug\033[0m          Show debug information (question, JSON, response)"
+  echo -e "  \033[1;32m-s, --save <file>\033[0m    Save the output to a file"
+  echo -e "  \033[1;32m-p, --push <file>\033[0m    Include the content of a file in the question (can be used multiple times)"
+  echo -e "\033[1;34m\nExamples :\033[0m"
+  echo -e "  ./dp -s README.MD list my files"
+  echo -e "  ./dp -c list files in color"
+  echo -e "  ./dp -d show disk usage"
+  echo -e "  ./dp -p README.MD summarize in one sentence in Dutch"
+  echo -e "  ./dp liste fichiers de ce répertoire en couleurs et avec juste la taille lisible en Mo"
   exit 0
 fi
 
