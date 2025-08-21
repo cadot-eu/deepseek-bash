@@ -9,22 +9,41 @@ if [ -z "$DEEPSEEK_API_TOKEN" ]; then
   exit 1
 fi
 
-# Vérifier les options -c/--confirmation, -d/--debug et -s/--save
+is_command() {
+  # Vérifie si la commande commence par un mot-clé bash courant
+  [[ "$1" =~ ^(ls|cat|echo|grep|find|cp|mv|rm|touch|chmod|chown|head|tail|awk|sed|tar|zip|unzip|curl|wget|du|df|ps|top|kill|mkdir|rmdir|date|whoami|pwd|man|less|more|sort|uniq|cut|env|export|source|bash|sh|python|pip|git|docker|systemctl|service|journalctl|apt|yum|dnf|zypper|make|gcc|g\+\+|java|node|npm|composer|php|perl|ruby|go|cargo|rustc|dotnet|mongo|mysql|psql|sqlite3|ifconfig|ip|netstat|ss|ping|traceroute|route|hostname|crontab|at|jobs|bg|fg|history|clear|logout|exit)\b ]] && return 0 || return 1
+}
+
+# Vérifier les options -c/--confirmation, -d/--debug, -s/--save et -p/--push
 CONFIRM=false
 DEBUG=false
 SAVE=false
 SAVE_PATH=""
-if [[ "$1" == "-c" || "$1" == "--confirmation" ]]; then
-  CONFIRM=true
-  shift
-elif [[ "$1" == "-d" || "$1" == "--debug" ]]; then
-  DEBUG=true
-  shift
-elif [[ "$1" == "-s" || "$1" == "--save" ]]; then
-  SAVE=true
-  SAVE_PATH="$2"
-  shift 2
-fi
+PUSH_FILES=()
+while [[ "$1" =~ ^- ]]; do
+  case "$1" in
+    -c|--confirmation)
+      CONFIRM=true
+      shift
+      ;;
+    -d|--debug)
+      DEBUG=true
+      shift
+      ;;
+    -s|--save)
+      SAVE=true
+      SAVE_PATH="$2"
+      shift 2
+      ;;
+    -p|--push)
+      PUSH_FILES+=("$2")
+      shift 2
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
 
 # Récupérer les HISTORY dernières commandes du bash
 
@@ -33,8 +52,22 @@ HIST_COUNT=${HISTORY:-10}
 BASH_HISTORY_RAW=$(tail -n "$HIST_COUNT" ~/.bash_history | awk '{print NR ": " $0}')
 BASH_HISTORY=$(printf '%s' "$BASH_HISTORY_RAW" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read())[1:-1])')
 
+# Ajouter le contenu des fichiers push à la question
+PUSH_CONTENT=""
+for f in "${PUSH_FILES[@]}"; do
+  if [ -f "$f" ]; then
+    FILE_TEXT=$(cat "$f")
+    PUSH_CONTENT+="\n\n--- File: $f ---\n$FILE_TEXT"
+  else
+    PUSH_CONTENT+="\n\n--- File: $f not found ---"
+  fi
+done
+
 # Construire la requête à partir des arguments
 PROMPT="$*"
+if [ -n "$PUSH_CONTENT" ]; then
+  PROMPT="$PUSH_CONTENT\n\n$PROMPT"
+fi
 
 # Appeler l'API DeepSeek
 # (supprimé pour une sortie plus propre)
@@ -79,7 +112,9 @@ fi
 
 
 # Afficher la commande avant exécution ou debug
-echo "Commande exécutée : $COMMAND"
+if is_command "$COMMAND"; then
+  echo "Commande exécutée : $COMMAND"
+fi
 if [ "$DEBUG" = true ]; then
   echo -e "\n--- DEBUG ---"
   echo -e "\033[1;34mQuestion envoyée à DeepSeek :\033[0m"
@@ -104,13 +139,28 @@ if [ "$SAVE" = true ]; then
   echo "Résultat de la commande sauvegardé dans : $SAVE_PATH"
   exit 0
 fi
+
+# Détection si la réponse est une commande bash ou du texte
+is_command() {
+  # Vérifie si la commande commence par un mot-clé bash courant
+  [[ "$1" =~ ^(ls|cat|echo|grep|find|cp|mv|rm|touch|chmod|chown|head|tail|awk|sed|tar|zip|unzip|curl|wget|du|df|ps|top|kill|mkdir|rmdir|date|whoami|pwd|man|less|more|sort|uniq|cut|env|export|source|bash|sh|python|pip|git|docker|systemctl|service|journalctl|apt|yum|dnf|zypper|make|gcc|g\+\+|java|node|npm|composer|php|perl|ruby|go|cargo|rustc|dotnet|mongo|mysql|psql|sqlite3|ifconfig|ip|netstat|ss|ping|traceroute|route|hostname|crontab|at|jobs|bg|fg|history|clear|logout|exit)\b ]] && return 0 || return 1
+}
+
 if [ "$CONFIRM" = true ]; then
   read -p "Voulez-vous exécuter cette commande ? (O/n) : " confirm
   if [[ -z "$confirm" || "$confirm" =~ ^[oOyY]$ ]]; then
-    bash -c "$COMMAND"
+    if is_command "$COMMAND"; then
+      bash -c "$COMMAND"
+    else
+      echo "$COMMAND"
+    fi
   else
     echo "Commande annulée."
   fi
 else
-  bash -c "$COMMAND"
+  if is_command "$COMMAND"; then
+    bash -c "$COMMAND"
+  else
+    echo "$COMMAND"
+  fi
 fi
