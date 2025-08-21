@@ -26,7 +26,7 @@ if [ $# -eq 0 ]; then
   echo -e "  ./dp -c list files in color"
   echo -e "  ./dp -d show disk usage"
   echo -e "  ./dp -p README.MD summarize in one sentence in Dutch"
-  echo -e "  ./dp liste fichiers de ce répertoire en couleurs et avec juste la taille lisible en Mo"
+  echo -e "  ./dp liste fichiers de ce répertoire en couleurs et avec juste la taille lisible en Mo (in other languages)"
   exit 0
 fi
 
