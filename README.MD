@@ -75,6 +75,18 @@ Ce script permet d'interagir avec l'API DeepSeek pour générer et exécuter des
 - `./dp -p README.MD résume moi en une phrase en néerlandais`
   - Envoie le contenu de `README.MD` à DeepSeek et demande un résumé en néerlandais. La réponse sera affichée en texte simple (non exécutée comme commande).
 
+
+## Contributing
+
+If you would like to propose improvements or modifications to this code:
+
+- Fork the repository on GitHub
+- Create a branch with your changes
+- Open a pull request describing your modifications
+- Or simply open an issue to suggest ideas or report bugs
+
+All contributions and feedback are welcome!
+
 ## Details
 
 - The script uses the API token from `~/.deepseek_bash`.
