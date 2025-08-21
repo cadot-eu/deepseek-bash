@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# Charger le token depuis le fichier caché
+source ~/.deepseek_bash
+
+# Vérifier que le token est présent
+if [ -z "$DEEPSEEK_API_TOKEN" ]; then
+  echo "Token API DeepSeek manquant dans ~/.deepseek_bash"
+  exit 1
+fi
+
+# Construire la requête à partir des arguments
+PROMPT="$*"
+
+# Appeler l'API DeepSeek
+echo "Commande générée: $COMMAND"
+
+echo "Commande générée: $COMMAND"
+
+
+# Échapper correctement le prompt pour le JSON
+ESCAPED_PROMPT=$(printf '%s' "$PROMPT" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read())[1:-1])')
+
+JSON_PAYLOAD=$(cat <<EOF
+{
+  "model": "deepseek-chat",
+  "messages": [
+    {"role": "system", "content": "You are a helpful assistant. You only answer with a bash command, no explanation."},
+    {"role": "user", "content": "$ESCAPED_PROMPT"}
+  ],
+  "stream": false
+}
+EOF
+)
+
+RESPONSE=$(curl -s -X POST "https://api.deepseek.com/chat/completions" \
+  -H "Authorization: Bearer $DEEPSEEK_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "$JSON_PAYLOAD")
+
+# Afficher la réponse brute pour debug
+echo "Réponse API: $RESPONSE"
+
+echo "Commande générée: $COMMAND"
+# Extraire la commande générée (champ assistant, JSON imbriqué)
+COMMAND=$(echo "$RESPONSE" | python3 -c "import sys, json; r=json.load(sys.stdin); print(r['choices'][0]['message']['content']) if 'choices' in r and r['choices'] else print('')")
+
+if [ -z "$COMMAND" ]; then
+  ERROR_MSG=$(echo "$RESPONSE" | grep -oP '"error_msg"\s*:\s*"\K[^"}]+')
+  if [ -n "$ERROR_MSG" ]; then
+    echo "Erreur API DeepSeek: $ERROR_MSG"
+  else
+    echo "Erreur: aucune commande générée. Réponse: $RESPONSE"
+  fi
+  exit 2
+fi
+
+echo "Commande générée: $COMMAND"
+
+# Exécuter la commande
+bash -c "$COMMAND"
+
+# Confirmation
+echo "Commande exécutée avec succès."
