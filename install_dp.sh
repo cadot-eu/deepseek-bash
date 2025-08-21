@@ -3,6 +3,22 @@
 
 set -e
 
+
+# Vérifier et installer curl si nécessaire
+if ! command -v curl >/dev/null 2>&1; then
+  echo "curl n'est pas installé. Installation en cours..."
+  if command -v apt-get >/dev/null 2>&1; then
+    sudo apt-get update && sudo apt-get install -y curl
+  elif command -v yum >/dev/null 2>&1; then
+    sudo yum install -y curl
+  elif command -v dnf >/dev/null 2>&1; then
+    sudo dnf install -y curl
+  else
+    echo "Veuillez installer curl manuellement."
+    exit 2
+  fi
+fi
+
 # Copier le script dp dans le répertoire courant
 if [ ! -f "dp" ]; then
     echo "Erreur : le script dp doit être présent dans le répertoire courant."
